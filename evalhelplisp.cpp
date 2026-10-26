@@ -606,8 +606,19 @@ void  assign (NAME nm,  NUMBER n, ENV rho)
 
 NUMBER fetch ( NAME nm, ENV rho)
 {
-   VALUELIST  vl;
-  //do this
+   NAMELIST nl = rho->vars;
+   VALUELIST  vl = rho->values;
+   while (nl != 0){
+      if (nl->head == nm){
+         return (vl->head); 
+      }
+      nl = nl->tail;
+      vl = vl->tail;
+   }
+   cout << "Unbound variable: ";
+   prName(nm);
+   cout << endl;
+   exit(1);
 }
 
 /* isBound - check if nm is bound in rho  */
