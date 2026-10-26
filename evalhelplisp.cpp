@@ -665,14 +665,24 @@ int arity ( int op)
 NUMBER applyValueOp ( int op,  VALUELIST vl)
 {
    NUMBER  n, n1, n2;
-
    if ( arity(op) != lengthVL(vl) )
    {
 	  cout <<	"Wrong number of arguments to  ";
 	  prName(op);
 	  cout <<endl;
-    }
-  //do this
+   }
+   switch (op) {
+      case 4:   // +
+      case 5:   // -
+      case 6:   // *
+      case 7:   // /
+      case 8:   // =
+      case 9:   // <
+      case 10:  // >
+      case 11:  // print
+
+   while (vl != 0) { 
+
    };//switch
    return n;
 }// applyValueOp
