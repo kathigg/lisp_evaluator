@@ -625,7 +625,7 @@ NUMBER fetch ( NAME nm, ENV rho)
 
 int isBound ( NAME nm, ENV rho)
 {
-   //do this
+   return findVar(nm, rho) != 0;
 }
 
 
