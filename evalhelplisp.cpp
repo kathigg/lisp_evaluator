@@ -589,8 +589,17 @@ VALUELIST findVar ( NAME nm, ENV rho)
 
 void  assign (NAME nm,  NUMBER n, ENV rho)
 {
-   VALUELIST varloc;
-   //do this
+   NAMELIST nl = rho->vars;
+   VALUELIST vl = rho->values;
+   while (nl != 0) {
+      if (nl->head == nm) {
+         vl->head = n;
+         return;
+      } 
+      nl = nl->tail;
+      vl = vl->tail; 
+   }
+   return;
 }// assign
 
 /* fetch - return number bound to nm in rho */
