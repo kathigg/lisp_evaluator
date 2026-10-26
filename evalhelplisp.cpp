@@ -270,6 +270,11 @@ NAME install ( char* nm)
    }
    if (i > numNames)
    {
+	  if (i >= MAXNAMES)
+	  {
+	     cout << "Too many names" << endl;
+	     exit(1);
+	  }
 	  numNames = i;
 	  printNames[i] = new char[strlen(nm) + 1];
 	  strcpy(printNames[i], nm);
@@ -326,14 +331,19 @@ int matches (int s, int leng,  char* nm)
 
 /* nextchar - read next char - filter tabs and comments */
 
-void nextchar (char& c)
+int nextchar (char& c)
 {
-    scanf("%c", &c);
+    if (scanf("%c", &c) != 1)
+       return 0;
     if (c == COMMENTCHAR )
     {
-	  while ( c != '\n' )
-		scanf("%c",&c);
+	  while (c != '\n')
+         if (scanf("%c", &c) != 1)
+            return 0;
     }
+    if (c == TABCODE)
+       c = ' ';
+    return 1;
 }
 
 
@@ -341,16 +351,20 @@ void nextchar (char& c)
 void readParens()
 {
    int parencnt; /* current depth of parentheses */
-   char c;
+   char c = '\0';
    parencnt = 1; // '(' just read
    do
    {
 	  if (c == '\n')
 	    cout <<PROMPT2;
 	  cout.flush();
-	  nextchar(c);
+	  if (!nextchar(c))
+	  {
+	     cout << "Unclosed parentheses" << endl;
+	     exit(1);
+	  }
 	  pos++;
-	  if (pos == MAXINPUT )
+	  if (pos >= MAXINPUT - 1)
 	  {
 		cout <<"User input too long\n";
 		exit(1);
@@ -369,7 +383,7 @@ void readParens()
 
 /* readInput - read char's into userinput */
 
-void readInput()
+int readInput()
 {
     char  c;
     cout << PROMPT;
@@ -378,12 +392,17 @@ void readInput()
     do
 	 {
 	    ++pos ;
-	    if (pos == MAXINPUT )
+	    if (pos >= MAXINPUT - 1)
 	    {
 		    cout << "User input too long\n";
 		    exit(1);
 	    }
-	    nextchar(c);
+	    if (!nextchar(c))
+	    {
+	       if (pos == 1)
+	          return 0;
+	       c = '\n';
+	    }
 	    if (c == '\n' )
 		   userinput[pos] = ' ';
 	    else
@@ -394,31 +413,38 @@ void readInput()
 	while (c != '\n');
 	inputleng = pos;
 	userinput[pos+1] = COMMENTCHAR; // sentinel
+    return 1;
 }
 
 
 /* reader - read char's into userinput; be sure input not blank  */
 
-void reader ()
+int reader ()
 {
     do
     {
-	  readInput();
+	  if (!readInput())
+	     return 0;
 	  pos = skipblanks(1);
     }
     while( pos > inputleng); // ignore blank lines
+    return 1;
 }
 
 /* parseName - return (installed) NAME starting at userinput[pos]*/
 
 NAME parseName()
 {
-   char nm[20]; // array to accumulate characters
+   char nm[NAMELENG + 1]; // array to accumulate characters
    int leng; // length of name
    leng = 0;
    while ( (pos <= inputleng) && !isDelim(userinput[pos]) )
    {
-	    
+	    if (leng == NAMELENG)
+	    {
+	       cout << "Name too long" << endl;
+	       exit(1);
+	    }
 	    nm[leng] = userinput[pos];
 	    ++pos;
 	    ++leng;
@@ -670,6 +696,7 @@ NUMBER applyValueOp ( int op,  VALUELIST vl)
 	  cout <<	"Wrong number of arguments to  ";
 	  prName(op);
 	  cout <<endl;
+      exit(1);
    }
    n1 = vl->head;
    if (op != 11) // every operator except print needs a second value
@@ -688,6 +715,11 @@ NUMBER applyValueOp ( int op,  VALUELIST vl)
          break;
 
       case 7:   // /
+         if (n2 == 0)
+         {
+            cout << "Division by zero" << endl;
+            exit(1);
+         }
          n = n1 / n2;
          break;
 
@@ -705,8 +737,13 @@ NUMBER applyValueOp ( int op,  VALUELIST vl)
 
       case 11:  // print
          prValue(n1);
+         cout << endl;
          n = n1;
          break;
+
+      default:
+         cout << "Unknown value operator" << endl;
+         exit(1);
    }
    return n;
 }// applyValueOp
@@ -734,9 +771,24 @@ VALUELIST evalList ( EXPLIST el, ENV rho)
 
 NUMBER applyUserFun ( NAME nm, VALUELIST actuals)
 {
-    FUNDEF f;
-    ENV rho;
-  //do this
+    FUNDEF f = fetchFun(nm);
+    if (f == 0)
+    {
+       cout << "Undefined function: ";
+       prName(nm);
+       cout << endl;
+       exit(1);
+    }
+    if (lengthNL(f->formals) != lengthVL(actuals))
+    {
+       cout << "Wrong number of arguments to ";
+       prName(nm);
+       cout << endl;
+       exit(1);
+    }
+
+    ENV rho = mkEnv(f->formals, actuals);
+    return eval(f->body, rho);
 }// applyUserFun
 
 /* applyCtrlOp - apply CONTROLOP op to args in rho   */
@@ -744,24 +796,62 @@ NUMBER applyUserFun ( NAME nm, VALUELIST actuals)
 NUMBER applyCtrlOp ( int op,  EXPLIST args, ENV rho )
 {
    NUMBER  n =0;
-   if (op == 0) {
-   	//do this
-   }
-	
-
-   if ( op == 1)
+   if (op == 0) // loop
    {
-	 //do this
-    };
-    if( op == 3)
-    {
-	   //do this
-    }
-    if( op == 2)
-    {
-	 //do this
-    }
-    return n;
+      if (args == 0 || args->tail == 0 || args->tail->tail != 0)
+      {
+         cout << "loop needs a condition and a body" << endl;
+         exit(1);
+      }
+      while (isTrueVal(eval(args->head, rho)))
+         n = eval(args->tail->head, rho);
+      return n;
+   }
+
+   if (op == 1) // if
+   {
+      if (args == 0 || args->tail == 0 ||
+          args->tail->tail == 0 || args->tail->tail->tail != 0)
+      {
+         cout << "if needs a condition and two branches" << endl;
+         exit(1);
+      }
+      if (isTrueVal(eval(args->head, rho)))
+         return eval(args->tail->head, rho);
+      return eval(args->tail->tail->head, rho);
+   }
+
+   if (op == 3) // set
+   {
+      if (args == 0 || args->tail == 0 || args->tail->tail != 0 ||
+          args->head->etype != VAREXP)
+      {
+         cout << "set needs a variable and a value" << endl;
+         exit(1);
+      }
+      NAME nm = args->head->varble;
+      n = eval(args->tail->head, rho);
+      if (isBound(nm, rho))
+         assign(nm, n, rho);
+      else if (isBound(nm, globalEnv))
+         assign(nm, n, globalEnv);
+      else
+         bindVar(nm, n, globalEnv);
+      return n;
+   }
+
+   if (op == 2) // block
+   {
+      while (args != 0)
+      {
+         n = eval(args->head, rho);
+         args = args->tail;
+      }
+      return n;
+   }
+
+   cout << "Unknown control operator" << endl;
+   exit(1);
 }// applyCtrlOp
 
 // eval - return value of expression e in local environment rho
@@ -771,7 +861,10 @@ NUMBER eval ( EXP e,  ENV rho)
    switch (e->etype)
    {
 	  case VALEXP: return (e->num);
-	  case VAREXP:  //do this
+	  case VAREXP:
+              if (isBound(e->varble, rho))
+                 return fetch(e->varble, rho);
+              return fetch(e->varble, globalEnv);
 				 
 	  case APEXP:  if (e->optr > numBuiltins)
 				      return  applyUserFun(e->optr, evalList(e->args, rho));
@@ -798,7 +891,8 @@ int main()
    while (!quittingtime)
    {
    	
-	 reader();
+	 if (!reader())
+	    break;
 	 if ( matches(pos, 4, (char* )"quit"))
 	    quittingtime = 1;
 	 else if( (userinput[pos] == '(') &&
