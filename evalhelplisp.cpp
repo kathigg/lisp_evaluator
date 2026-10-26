@@ -716,10 +716,19 @@ NUMBER applyValueOp ( int op,  VALUELIST vl)
  *                     EVALUATION                                *
  *****************************************************************/
 
-/* evalList - evaluate each expression in el */
+/* eval -- evaluate an expression. */
 NUMBER eval ( EXP e,  ENV rho){
-   for (int i = 0; i < el.length; 
-
+   switch (e->etype) {
+      case VALEXP:
+         return e->num;
+      case VAREXP:
+         return fetch(e->varble, rho); 
+      case APEXP:
+         if (e->optr > numBuiltins) return applyUserFun(e->optr, evalList(e->args, rho)); 
+         if (e->optr < 4) return applyCtrlOp(e->optr, e->args, rho); 
+         return applyValueOp(e->optr, evalList(e->args, rho));
+   }
+   return 0;
 }
 
 VALUELIST evalList ( EXPLIST el, ENV rho)
