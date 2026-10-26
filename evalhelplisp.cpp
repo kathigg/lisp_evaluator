@@ -3,6 +3,7 @@
 #include<string.h>
 #include<stdlib.h>
 #include<stdio.h>
+#include<stdbool.h> 
 using namespace std;
 
 /*****************************************************************
@@ -575,7 +576,8 @@ VALUELIST findVar ( NAME nm, ENV rho)
 {
    NAMELIST  nl;
    VALUELIST  vl;
-  //do this
+   bool found = false
+   while 
    return vl;
 }
 
