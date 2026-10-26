@@ -671,19 +671,43 @@ NUMBER applyValueOp ( int op,  VALUELIST vl)
 	  prName(op);
 	  cout <<endl;
    }
+   n1 = vl->head;
+   if (op != 11) // every operator except print needs a second value
+      n2 = vl->tail->head; 
    switch (op) {
       case 4:   // +
+         n = n1 + n2;
+         break;
+
       case 5:   // -
+         n = n1 - n2;
+         break;
+
       case 6:   // *
+         n = n1 * n2;
+         break;
+
       case 7:   // /
+         n = n1 / n2;
+         break;
+
       case 8:   // =
+         n = (n1 == n2);
+         break;
+
       case 9:   // <
+         n = (n1 < n2);
+         break;
+
       case 10:  // >
+         n = (n1 > n2);
+         break;
+
       case 11:  // print
-
-   while (vl != 0) { 
-
-   };//switch
+         prValue(n1);
+         n = n1;
+         break;
+   }
    return n;
 }// applyValueOp
 
