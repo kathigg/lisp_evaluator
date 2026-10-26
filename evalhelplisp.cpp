@@ -574,11 +574,14 @@ void bindVar ( NAME nm,  NUMBER n,  ENV rho)
 
 VALUELIST findVar ( NAME nm, ENV rho)
 {
-   NAMELIST  nl;
-   VALUELIST  vl;
-   bool found = false
-   while 
-   return vl;
+   NAMELIST  nl = rho->vars;
+   VALUELIST  vl = rho->values;
+   while (nl != 0) { // reminder that 0 is our stand-in for the null pointer
+      if (nl->head == nm) return vl; 
+      nl = nl->tail;
+      vl = vl->tail; 
+   }
+   return 0;
 }
 
 
