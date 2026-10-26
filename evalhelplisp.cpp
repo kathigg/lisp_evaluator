@@ -735,7 +735,10 @@ VALUELIST evalList ( EXPLIST el, ENV rho)
 {
     NUMBER h;
     VALUELIST t;
-   //do this
+    if (el == 0) return 0;
+    h = eval(el->head, rho);
+    t = evalList(el->tail, rho); 
+    return mkValuelist(h,t); 
 }// evalList
 
 /* applyUserFun - look up definition of nm and apply to actuals  */
