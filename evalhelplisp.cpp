@@ -565,7 +565,8 @@ ENV emptyEnv()
 
 void bindVar ( NAME nm,  NUMBER n,  ENV rho)
 {
-   //do this
+   rho->vars = mkNamelist(nm, rho->vars); 
+   rho->values = mkValuelist(n, rho->values); 
 }
 
 /* findVar - look up nm in rho   */
@@ -657,7 +658,10 @@ NUMBER applyValueOp ( int op,  VALUELIST vl)
  *****************************************************************/
 
 /* evalList - evaluate each expression in el */
-NUMBER eval ( EXP e,  ENV rho);
+NUMBER eval ( EXP e,  ENV rho){
+   for (int i = 0; i < el.length; 
+
+}
 
 VALUELIST evalList ( EXPLIST el, ENV rho)
 {
