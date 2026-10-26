@@ -716,29 +716,18 @@ NUMBER applyValueOp ( int op,  VALUELIST vl)
  *                     EVALUATION                                *
  *****************************************************************/
 
-/* eval -- evaluate an expression. */
-NUMBER eval ( EXP e,  ENV rho){
-   switch (e->etype) {
-      case VALEXP:
-         return e->num;
-      case VAREXP:
-         return fetch(e->varble, rho); 
-      case APEXP:
-         if (e->optr > numBuiltins) return applyUserFun(e->optr, evalList(e->args, rho)); 
-         if (e->optr < 4) return applyCtrlOp(e->optr, e->args, rho); 
-         return applyValueOp(e->optr, evalList(e->args, rho));
-   }
-   return 0;
-}
+NUMBER eval ( EXP e, ENV rho);
 
 VALUELIST evalList ( EXPLIST el, ENV rho)
 {
     NUMBER h;
     VALUELIST t;
-    if (el == 0) return 0;
+    if (el == 0)
+       return 0;
+
     h = eval(el->head, rho);
-    t = evalList(el->tail, rho); 
-    return mkValuelist(h,t); 
+    t = evalList(el->tail, rho);
+    return mkValuelist(h, t);
 }// evalList
 
 /* applyUserFun - look up definition of nm and apply to actuals  */
